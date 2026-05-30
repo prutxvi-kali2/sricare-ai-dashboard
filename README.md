@@ -1,6 +1,87 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Supabase Setup
+
+This dashboard reads appointments from a Supabase `appointments` table.
+
+Find your Supabase Project URL:
+
+1. Open your Supabase project.
+2. Go to **Project Settings**.
+3. Open **API**.
+4. Copy the **Project URL**.
+
+Find your Supabase Publishable Key:
+
+1. Open your Supabase project.
+2. Go to **Project Settings**.
+3. Open **API**.
+4. Copy the **Publishable key**.
+
+Find your Supabase Service Role Key:
+
+1. Open your Supabase project.
+2. Go to **Project Settings**.
+3. Open **API**.
+4. Copy the **service_role** key.
+
+Create your local environment file:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Then update `.env.local` with your Supabase values:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
+```
+
+Do not commit `.env.local`.
+
+The dashboard expects this table:
+
+```text
+appointments
+- id
+- patient_name
+- phone_number
+- department
+- doctor
+- appointment_date
+- appointment_time
+- status
+- source
+- created_at
+```
+
+Appointments are shown newest first using `created_at`.
+
+## OmniDimension Webhook
+
+The webhook endpoint is:
+
+```text
+/api/appointments
+```
+
+For local testing, use:
+
+```text
+http://localhost:3000/api/appointments
+```
+
+For OmniDimension production webhook settings, use your deployed app URL:
+
+```text
+https://YOUR_DEPLOYED_DOMAIN.com/api/appointments
+```
+
+The endpoint accepts `POST` requests, logs the full incoming payload, extracts appointment fields, and inserts them into Supabase.
+
+## Run the Project
 
 First, run the development server:
 
