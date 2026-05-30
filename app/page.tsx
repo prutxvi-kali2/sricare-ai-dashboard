@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type ComponentType, useEffect, useMemo, useState } from "react";
 
 type IconProps = {
   className?: string;
@@ -32,7 +32,7 @@ type Kpi = {
   label: string;
   value: string | number;
   trend: string;
-  icon: (props: IconProps) => JSX.Element;
+  icon: ComponentType<IconProps>;
 };
 
 const refreshIntervalMs = 10_000;
