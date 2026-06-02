@@ -1,6 +1,12 @@
 "use client";
 
-import { type ComponentType, useEffect, useMemo, useState } from "react";
+import {
+  type ComponentType,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 type IconProps = {
   className?: string;
@@ -30,9 +36,11 @@ type AppointmentsResponse = {
 
 type Kpi = {
   label: string;
-  value: string | number;
+  value: number;
+  suffix?: string;
   trend: string;
   icon: ComponentType<IconProps>;
+  progress?: number;
 };
 
 const refreshIntervalMs = 10_000;
@@ -93,6 +101,23 @@ function formatLastUpdated(timestamp: string | null) {
   }).format(new Date(timestamp));
 }
 
+function formatReceivedTime(timestamp: string | null) {
+  if (!timestamp) {
+    return "Not received yet";
+  }
+
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not received yet";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 function getKpis(appointments: Appointment[]): Kpi[] {
   const appointmentsBooked = appointments.length;
   const activePatients = new Set(
@@ -108,8 +133,8 @@ function getKpis(appointments: Appointment[]): Kpi[] {
   ).length;
   const bookingSuccessRate =
     appointmentsBooked > 0
-      ? `${Math.round((successfulBookings / appointmentsBooked) * 100)}%`
-      : "0%";
+      ? Math.round((successfulBookings / appointmentsBooked) * 100)
+      : 0;
 
   return [
     {
@@ -125,10 +150,12 @@ function getKpis(appointments: Appointment[]): Kpi[] {
       icon: CalendarIcon,
     },
     {
-      label: "Booking Success Rate",
+      label: "Success Rate",
       value: bookingSuccessRate,
+      suffix: "%",
       trend: "Confirmed appointments",
       icon: SparkIcon,
+      progress: bookingSuccessRate,
     },
     {
       label: "Active Patients",
@@ -137,6 +164,99 @@ function getKpis(appointments: Appointment[]): Kpi[] {
       icon: UsersIcon,
     },
   ];
+}
+
+function useCountUp(value: number, durationMs = 700) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const displayValueRef = useRef(value);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let animationFrame = 0;
+
+    if (mediaQuery.matches) {
+      animationFrame = window.requestAnimationFrame(() => {
+        setDisplayValue(value);
+        displayValueRef.current = value;
+      });
+
+      return () => {
+        window.cancelAnimationFrame(animationFrame);
+      };
+    }
+
+    if (value === displayValueRef.current) {
+      return;
+    }
+
+    const startTime = window.performance.now();
+    const startValue = displayValueRef.current;
+    const change = value - startValue;
+
+    const updateValue = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const nextValue = Math.round(startValue + change * easedProgress);
+
+      setDisplayValue(nextValue);
+      displayValueRef.current = nextValue;
+
+      if (progress < 1) {
+        animationFrame = window.requestAnimationFrame(updateValue);
+      }
+    };
+
+    animationFrame = window.requestAnimationFrame(updateValue);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+    };
+  }, [durationMs, value]);
+
+  return displayValue;
+}
+
+function KpiCard({ kpi }: { kpi: Kpi }) {
+  const Icon = kpi.icon;
+  const animatedValue = useCountUp(kpi.value);
+
+  return (
+    <article className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_20px_45px_rgba(37,99,235,0.12)]">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-slate-500">{kpi.label}</p>
+          <p className="mt-3 text-3xl font-semibold tracking-normal text-slate-950">
+            {animatedValue}
+            {kpi.suffix}
+          </p>
+        </div>
+        <div className="rounded-2xl bg-blue-50 p-3 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
+          <Icon className="h-6 w-6" />
+        </div>
+      </div>
+
+      {typeof kpi.progress === "number" ? (
+        <div
+          aria-label={`${kpi.label} progress`}
+          className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"
+          role="progressbar"
+          aria-valuenow={kpi.progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all duration-700 ease-out"
+            style={{ width: `${kpi.progress}%` }}
+          />
+        </div>
+      ) : null}
+
+      <p className="mt-5 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+        {kpi.trend}
+      </p>
+    </article>
+  );
 }
 
 function PhoneIcon({ className }: IconProps) {
@@ -210,6 +330,25 @@ function UsersIcon({ className }: IconProps) {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M15.5 18.25a4.5 4.5 0 0 0-9 0M11 12.25a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5ZM18 17.25a3.5 3.5 0 0 0-2.75-3.42M15.75 5.95a2.75 2.75 0 0 1 0 5.35"
+      />
+    </svg>
+  );
+}
+
+function ClipboardPulseIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.75 5.75h4.5m-4.5 0a2.25 2.25 0 0 1 4.5 0m-4.5 0H7.5a2 2 0 0 0-2 2v10.5a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7.75a2 2 0 0 0-2-2h-2.25M8.75 13.25l2.25 2.25 4.25-5"
       />
     </svg>
   );
@@ -304,14 +443,17 @@ export default function Home() {
                 AI-powered appointment booking and patient call management
               </p>
             </div>
-            <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-              <span className="h-3 w-3 rounded-full bg-emerald-500 shadow-[0_0_0_5px_rgba(16,185,129,0.16)]" />
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500 shadow-[0_0_0_5px_rgba(16,185,129,0.16)]" />
+              </span>
               <div>
                 <p className="text-xs font-medium text-emerald-700">
                   Receptionist Status
                 </p>
                 <p className="text-sm font-semibold text-emerald-900">
-                  Online and syncing live data
+                  Online and syncing
                 </p>
               </div>
             </div>
@@ -322,33 +464,9 @@ export default function Home() {
           aria-label="AI receptionist metrics"
           className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
         >
-          {kpis.map((kpi) => {
-            const Icon = kpi.icon;
-
-            return (
-              <article
-                key={kpi.label}
-                className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_20px_45px_rgba(37,99,235,0.12)]"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">
-                      {kpi.label}
-                    </p>
-                    <p className="mt-3 text-3xl font-semibold tracking-normal text-slate-950">
-                      {kpi.value}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-blue-50 p-3 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                </div>
-                <p className="mt-5 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                  {kpi.trend}
-                </p>
-              </article>
-            );
-          })}
+          {kpis.map((kpi) => (
+            <KpiCard key={kpi.label} kpi={kpi} />
+          ))}
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)]">
@@ -451,9 +569,19 @@ export default function Home() {
                     <tr>
                       <td
                         colSpan={7}
-                        className="px-5 py-12 text-center text-sm font-medium text-slate-500 sm:px-6"
+                        className="px-5 py-14 text-center sm:px-6"
                       >
-                        No appointments yet
+                        <div className="mx-auto flex max-w-md flex-col items-center">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600 shadow-[0_12px_28px_rgba(37,99,235,0.12)]">
+                            <ClipboardPulseIcon className="h-7 w-7" />
+                          </div>
+                          <p className="mt-4 text-base font-semibold text-slate-950">
+                            AI Receptionist Ready
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-slate-500">
+                            Appointments booked through calls will appear here automatically.
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -463,6 +591,37 @@ export default function Home() {
           </article>
 
           <aside className="flex flex-col gap-6">
+            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_45px_rgba(15,23,42,0.07)] sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    Latest Appointment
+                  </p>
+                  <h2 className="mt-2 text-xl font-semibold tracking-normal text-slate-950">
+                    {latestAppointment?.patient_name ?? "Awaiting booking"}
+                  </h2>
+                </div>
+                <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
+                  <CalendarIcon className="h-6 w-6" />
+                </div>
+              </div>
+
+              <dl className="mt-5 grid gap-3 text-sm">
+                <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-3">
+                  <dt className="text-slate-500">Department</dt>
+                  <dd className="font-semibold text-slate-950">
+                    {latestAppointment?.department ?? "Not provided"}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-3">
+                  <dt className="text-slate-500">Time received</dt>
+                  <dd className="text-right font-semibold text-slate-950">
+                    {formatReceivedTime(latestAppointment?.created_at ?? null)}
+                  </dd>
+                </div>
+              </dl>
+            </article>
+
             <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_45px_rgba(15,23,42,0.07)] sm:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>

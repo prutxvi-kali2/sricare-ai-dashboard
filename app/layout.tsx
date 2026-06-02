@@ -13,8 +13,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SriCare AI Receptionist",
-  description: "AI-powered appointment booking and patient call management",
+  title: "SriCare AI - Clinic Dashboard",
+  description:
+    "Real-time clinic dashboard for AI receptionist calls and appointment bookings.",
+  applicationName: "SriCare AI",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+  },
+  openGraph: {
+    title: "SriCare AI - Clinic Dashboard",
+    description:
+      "Real-time clinic dashboard for AI receptionist calls and appointment bookings.",
+    siteName: "SriCare AI",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
