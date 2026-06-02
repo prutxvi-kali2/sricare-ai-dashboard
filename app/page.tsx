@@ -40,10 +40,41 @@ type Kpi = {
   suffix?: string;
   trend: string;
   icon: ComponentType<IconProps>;
+  tone: "sky" | "emerald" | "amber" | "violet";
   progress?: number;
 };
 
 const refreshIntervalMs = 10_000;
+
+const kpiToneStyles: Record<
+  Kpi["tone"],
+  {
+    card: string;
+    icon: string;
+    progress: string;
+  }
+> = {
+  sky: {
+    card: "from-sky-50/95 via-white to-white",
+    icon: "bg-sky-600 text-white shadow-[0_16px_32px_rgba(2,132,199,0.26)]",
+    progress: "bg-sky-500",
+  },
+  emerald: {
+    card: "from-emerald-50/95 via-white to-white",
+    icon: "bg-emerald-600 text-white shadow-[0_16px_32px_rgba(16,185,129,0.24)]",
+    progress: "bg-emerald-500",
+  },
+  amber: {
+    card: "from-amber-50/95 via-white to-white",
+    icon: "bg-amber-500 text-white shadow-[0_16px_32px_rgba(245,158,11,0.24)]",
+    progress: "bg-amber-500",
+  },
+  violet: {
+    card: "from-violet-50/95 via-white to-white",
+    icon: "bg-violet-600 text-white shadow-[0_16px_32px_rgba(124,58,237,0.22)]",
+    progress: "bg-violet-500",
+  },
+};
 
 const statusStyles: Record<AppointmentStatus, string> = {
   Confirmed: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -101,6 +132,57 @@ function formatLastUpdated(timestamp: string | null) {
   }).format(new Date(timestamp));
 }
 
+function formatHeroDate(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatHeroTime(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(date);
+}
+
+function formatAppointmentDate(timestamp: string | null) {
+  if (!timestamp) {
+    return "Not provided";
+  }
+
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) {
+    return timestamp;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+  }).format(date);
+}
+
+function getInitials(name: string | null) {
+  const fallback = "SR";
+
+  if (!name) {
+    return fallback;
+  }
+
+  const initials = name
+    .split(" ")
+    .map((part) => part.trim()[0])
+    .filter(Boolean)
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return initials || fallback;
+}
+
 function formatReceivedTime(timestamp: string | null) {
   if (!timestamp) {
     return "Not received yet";
@@ -135,6 +217,7 @@ function getKpis(appointments: Appointment[]): Kpi[] {
     appointmentsBooked > 0
       ? Math.round((successfulBookings / appointmentsBooked) * 100)
       : 0;
+  const peakCount = Math.max(callsToday, appointmentsBooked, activePatients, 1);
 
   return [
     {
@@ -142,12 +225,16 @@ function getKpis(appointments: Appointment[]): Kpi[] {
       value: callsToday,
       trend: "From live appointment records",
       icon: PhoneIcon,
+      tone: "sky",
+      progress: Math.round((callsToday / peakCount) * 100),
     },
     {
       label: "Appointments Booked",
       value: appointmentsBooked,
       trend: "Sorted by created_at DESC",
       icon: CalendarIcon,
+      tone: "emerald",
+      progress: Math.round((appointmentsBooked / peakCount) * 100),
     },
     {
       label: "Success Rate",
@@ -155,6 +242,7 @@ function getKpis(appointments: Appointment[]): Kpi[] {
       suffix: "%",
       trend: "Confirmed appointments",
       icon: SparkIcon,
+      tone: "violet",
       progress: bookingSuccessRate,
     },
     {
@@ -162,6 +250,8 @@ function getKpis(appointments: Appointment[]): Kpi[] {
       value: activePatients,
       trend: "Unique phone numbers",
       icon: UsersIcon,
+      tone: "amber",
+      progress: Math.round((activePatients / peakCount) * 100),
     },
   ];
 }
@@ -220,41 +310,47 @@ function useCountUp(value: number, durationMs = 700) {
 function KpiCard({ kpi }: { kpi: Kpi }) {
   const Icon = kpi.icon;
   const animatedValue = useCountUp(kpi.value);
+  const toneStyles = kpiToneStyles[kpi.tone];
 
   return (
-    <article className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_20px_45px_rgba(37,99,235,0.12)]">
-      <div className="flex items-start justify-between gap-4">
+    <article className={`group relative overflow-hidden rounded-[1.5rem] border border-white/70 bg-gradient-to-br p-6 shadow-[0_18px_50px_rgba(15,23,42,0.09)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_60px_rgba(15,23,42,0.14)] ${toneStyles.card}`}>
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-70" />
+      <div className="flex items-start justify-between gap-5">
         <div>
-          <p className="text-sm font-medium text-slate-500">{kpi.label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-normal text-slate-950">
+          <p className="text-sm font-medium tracking-wide text-slate-500 uppercase">
+            {kpi.label}
+          </p>
+          <p className="mt-4 text-4xl font-semibold tracking-tight text-slate-950">
             {animatedValue}
             {kpi.suffix}
           </p>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            {kpi.trend}
+          </p>
         </div>
-        <div className="rounded-2xl bg-blue-50 p-3 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
-          <Icon className="h-6 w-6" />
+        <div className={`flex h-14 w-14 items-center justify-center rounded-[1.25rem] ${toneStyles.icon} transition duration-300 group-hover:scale-105`}>
+          <Icon className="h-7 w-7" />
         </div>
       </div>
 
-      {typeof kpi.progress === "number" ? (
+      <div className="mt-5 flex items-center gap-3">
         <div
           aria-label={`${kpi.label} progress`}
-          className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"
+          className="h-2 flex-1 overflow-hidden rounded-full bg-white/80 shadow-inner"
           role="progressbar"
-          aria-valuenow={kpi.progress}
+          aria-valuenow={kpi.progress ?? 0}
           aria-valuemin={0}
           aria-valuemax={100}
         >
           <div
-            className="h-full rounded-full bg-emerald-500 transition-all duration-700 ease-out"
-            style={{ width: `${kpi.progress}%` }}
+            className={`h-full rounded-full transition-all duration-700 ease-out ${toneStyles.progress}`}
+            style={{ width: `${kpi.progress ?? 0}%` }}
           />
         </div>
-      ) : null}
-
-      <p className="mt-5 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-        {kpi.trend}
-      </p>
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          {kpi.progress ?? 0}%
+        </span>
+      </div>
     </article>
   );
 }
@@ -374,6 +470,7 @@ export default function Home() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
 
   useEffect(() => {
     let isMounted = true;
@@ -420,6 +517,18 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const tick = () => setCurrentTime(new Date());
+
+    tick();
+
+    const intervalId = window.setInterval(tick, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   const kpis = useMemo(() => getKpis(appointments), [appointments]);
   const latestAppointment = appointments[0] ?? null;
   const callsHandledToday = kpis[0]?.value ?? 0;
@@ -428,33 +537,78 @@ export default function Home() {
   ).length;
 
   return (
-    <main className="min-h-screen bg-white px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_30%),linear-gradient(180deg,#f8fbff_0%,#eef5ff_28%,#ffffff_70%)] px-4 py-4 text-slate-950 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="rounded-2xl border border-slate-200 bg-white px-5 py-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:px-7">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="mb-3 inline-flex rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                Clinic AI Front Desk
-              </p>
-              <h1 className="text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-                SriCare AI Receptionist
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                AI-powered appointment booking and patient call management
-              </p>
+        <header className="relative overflow-hidden rounded-[2rem] border border-white/50 bg-slate-950 px-6 py-7 text-white shadow-[0_32px_80px_rgba(15,23,42,0.24)] sm:px-8 lg:px-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.28),_transparent_30%),radial-gradient(circle_at_bottom_left,_rgba(59,130,246,0.24),_transparent_26%)]" />
+          <div className="absolute -right-20 top-0 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl" />
+          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_auto] lg:items-end">
+            <div className="flex items-start gap-5">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.5rem] border border-white/10 bg-white/10 text-xl font-semibold tracking-tight text-white shadow-[0_18px_40px_rgba(15,23,42,0.25)] backdrop-blur">
+                SR
+              </div>
+              <div className="max-w-3xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200 backdrop-blur">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                  </span>
+                  AI Receptionist Online
+                </div>
+                <h1 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+                  SriCare clinical operations
+                </h1>
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+                  Premium appointment intelligence for clinics and hospitals, powered by live Supabase data and designed for executive demos.
+                </p>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                      Current date
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-white">
+                      {formatHeroDate(currentTime)}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                      Current time
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-white">
+                      {formatHeroTime(currentTime)}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/10 px-4 py-3 backdrop-blur sm:col-span-2 xl:col-span-1">
+                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                      Last synced
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-white">
+                      {formatLastUpdated(lastUpdated)}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
-              <span className="relative flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500 shadow-[0_0_0_5px_rgba(16,185,129,0.16)]" />
-              </span>
-              <div>
-                <p className="text-xs font-medium text-emerald-700">
-                  Receptionist Status
-                </p>
-                <p className="text-sm font-semibold text-emerald-900">
-                  Online and syncing
-                </p>
+
+            <div className="relative rounded-[1.5rem] border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:min-w-[270px]">
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                    Dashboard mode
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    Live appointment intelligence
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                    Appointments tracked
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    {appointments.length}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -469,206 +623,371 @@ export default function Home() {
           ))}
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)]">
-          <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.07)]">
-            <div className="flex flex-col gap-2 border-b border-slate-200 px-5 py-5 sm:px-6 md:flex-row md:items-end md:justify-between">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,6.7fr)_minmax(320px,3.3fr)]">
+          <article className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-col gap-4 border-b border-slate-200 bg-white px-6 py-5 sm:px-7 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h2 className="text-xl font-semibold tracking-normal text-slate-950">
-                  Recent Appointments
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">
+                  Appointments
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                  Recent appointments
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Bookings captured by the AI receptionist today
+                <p className="mt-2 text-sm text-slate-500">
+                  Live records from the appointments table, sorted newest first.
                 </p>
               </div>
-              <div className="text-sm text-slate-500">
-                <p>
-                  Last updated: <span className="font-medium text-slate-700">{formatLastUpdated(lastUpdated)}</span>
-                </p>
-                <p className="mt-1">Auto-refreshes every 10 seconds</p>
+              <div className="rounded-full border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+                Sticky table header enabled
               </div>
             </div>
 
             {error ? (
-              <div className="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-700 sm:px-6">
+              <div className="border-b border-rose-100 bg-rose-50 px-6 py-3 text-sm text-rose-700 sm:px-7">
                 {error}
               </div>
             ) : null}
 
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[960px] border-collapse text-left">
-                <thead>
-                  <tr className="bg-slate-50 text-xs font-semibold uppercase text-slate-500">
-                    <th className="px-5 py-3 sm:px-6">Patient Name</th>
-                    <th className="px-5 py-3 sm:px-6">Phone Number</th>
-                    <th className="px-5 py-3 sm:px-6">Department</th>
-                    <th className="px-5 py-3 sm:px-6">Doctor</th>
-                    <th className="px-5 py-3 sm:px-6">Appointment Time</th>
-                    <th className="px-5 py-3 sm:px-6">Status</th>
-                    <th className="px-5 py-3 sm:px-6">Source</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {isLoading ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="px-5 py-12 text-center text-sm font-medium text-slate-500 sm:px-6"
-                      >
-                        Loading appointments...
-                      </td>
+            {isLoading ? (
+              <div className="grid min-h-[540px] place-items-center px-6 py-16 sm:px-7">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-sky-100 bg-sky-50 text-sky-600 shadow-[0_12px_28px_rgba(37,99,235,0.12)]">
+                    <ClipboardPulseIcon className="h-7 w-7 animate-pulse" />
+                  </div>
+                  <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-400">
+                    Syncing live data
+                  </p>
+                  <p className="text-base font-semibold text-slate-950">
+                    Loading appointments...
+                  </p>
+                </div>
+              </div>
+            ) : appointments.length > 0 ? (
+              <div className="max-h-[760px] overflow-auto">
+                <table className="w-full min-w-[1220px] border-collapse text-left">
+                  <thead className="sticky top-0 z-20">
+                    <tr className="bg-slate-50/95 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 backdrop-blur supports-[backdrop-filter]:bg-slate-50/90">
+                      <th className="sticky top-0 border-b border-slate-200 px-6 py-4 sm:px-7 bg-inherit">Patient Name</th>
+                      <th className="sticky top-0 border-b border-slate-200 px-6 py-4 sm:px-7 bg-inherit">Phone Number</th>
+                      <th className="sticky top-0 border-b border-slate-200 px-6 py-4 sm:px-7 bg-inherit">Department</th>
+                      <th className="sticky top-0 border-b border-slate-200 px-6 py-4 sm:px-7 bg-inherit">Doctor</th>
+                      <th className="sticky top-0 border-b border-slate-200 px-6 py-4 sm:px-7 bg-inherit">Appointment Date</th>
+                      <th className="sticky top-0 border-b border-slate-200 px-6 py-4 sm:px-7 bg-inherit">Appointment Time</th>
+                      <th className="sticky top-0 border-b border-slate-200 px-6 py-4 sm:px-7 bg-inherit">Status</th>
+                      <th className="sticky top-0 border-b border-slate-200 px-6 py-4 sm:px-7 bg-inherit">Source</th>
                     </tr>
-                  ) : appointments.length > 0 ? (
-                    appointments.map((appointment) => {
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {appointments.map((appointment) => {
                       const status = getAppointmentStatus(appointment.status);
 
                       return (
                         <tr
                           key={appointment.id}
-                          className="text-sm text-slate-700 transition-colors hover:bg-blue-50/40"
+                          className="text-sm text-slate-700 transition-colors duration-200 hover:bg-sky-50/60"
                         >
-                          <td className="whitespace-nowrap px-5 py-4 sm:px-6">
+                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
                             <div className="flex items-center gap-3">
-                              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-700">
-                                {(appointment.patient_name ?? "NA")
-                                  .split(" ")
-                                  .map((name) => name[0])
-                                  .join("")
-                                  .slice(0, 2)}
+                              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-600 to-blue-700 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(37,99,235,0.18)]">
+                                {getInitials(appointment.patient_name)}
                               </span>
                               <span className="font-semibold text-slate-950">
                                 {appointment.patient_name ?? "Not provided"}
                               </span>
                             </div>
                           </td>
-                          <td className="whitespace-nowrap px-5 py-4 sm:px-6">
+                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
                             {appointment.phone_number ?? "Not provided"}
                           </td>
-                          <td className="whitespace-nowrap px-5 py-4 sm:px-6">
+                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
                             {appointment.department ?? "Not provided"}
                           </td>
-                          <td className="whitespace-nowrap px-5 py-4 sm:px-6">
+                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
                             {appointment.doctor ?? "Not provided"}
                           </td>
-                          <td className="whitespace-nowrap px-5 py-4 font-medium text-slate-950 sm:px-6">
+                          <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-950 sm:px-7">
+                            {formatAppointmentDate(appointment.appointment_date)}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-950 sm:px-7">
                             {appointment.appointment_time ?? "Not provided"}
                           </td>
-                          <td className="whitespace-nowrap px-5 py-4 sm:px-6">
+                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
                             <span
                               className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[status]}`}
                             >
                               {status}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-5 py-4 sm:px-6">
+                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
                             {appointment.source ?? "Not provided"}
                           </td>
                         </tr>
                       );
-                    })
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="px-5 py-14 text-center sm:px-6"
-                      >
-                        <div className="mx-auto flex max-w-md flex-col items-center">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600 shadow-[0_12px_28px_rgba(37,99,235,0.12)]">
-                            <ClipboardPulseIcon className="h-7 w-7" />
-                          </div>
-                          <p className="mt-4 text-base font-semibold text-slate-950">
-                            AI Receptionist Ready
-                          </p>
-                          <p className="mt-2 text-sm leading-6 text-slate-500">
-                            Appointments booked through calls will appear here automatically.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="grid min-h-[620px] place-items-center px-6 py-16 sm:px-7">
+                <div className="max-w-xl rounded-[2rem] border border-sky-100 bg-gradient-to-b from-sky-50 via-white to-white p-10 text-center shadow-[0_18px_45px_rgba(37,99,235,0.12)]">
+                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-gradient-to-br from-sky-600 to-blue-700 text-white shadow-[0_18px_38px_rgba(37,99,235,0.2)]">
+                    <ClipboardPulseIcon className="h-10 w-10" />
+                  </div>
+                  <p className="mt-6 text-2xl font-semibold tracking-tight text-slate-950">
+                    Waiting for first patient booking
+                  </p>
+                  <p className="mt-4 text-sm leading-7 text-slate-500">
+                    New appointments from Supabase will appear here automatically once the first patient books.
+                  </p>
+                  <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 shadow-sm">
+                      Live sync
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 shadow-sm">
+                      Premium onboarding
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 shadow-sm">
+                      No manual refresh
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </article>
 
           <aside className="flex flex-col gap-6">
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_45px_rgba(15,23,42,0.07)] sm:p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    Latest Appointment
-                  </p>
-                  <h2 className="mt-2 text-xl font-semibold tracking-normal text-slate-950">
-                    {latestAppointment?.patient_name ?? "Awaiting booking"}
-                  </h2>
+            <article className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-slate-950 text-white shadow-[0_20px_60px_rgba(15,23,42,0.22)]">
+              <div className="bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.2),_transparent_34%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.16),_transparent_28%)] p-6 sm:p-7">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200">
+                      Featured booking
+                    </p>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+                      {latestAppointment?.patient_name ?? "Waiting for first patient booking"}
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">
+                      Latest appointment surfaced for executive review.
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/10 p-3 text-sky-100 backdrop-blur">
+                    <CalendarIcon className="h-6 w-6" />
+                  </div>
                 </div>
-                <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
-                  <CalendarIcon className="h-6 w-6" />
-                </div>
-              </div>
 
-              <dl className="mt-5 grid gap-3 text-sm">
-                <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-3">
-                  <dt className="text-slate-500">Department</dt>
-                  <dd className="font-semibold text-slate-950">
-                    {latestAppointment?.department ?? "Not provided"}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-3">
-                  <dt className="text-slate-500">Time received</dt>
-                  <dd className="text-right font-semibold text-slate-950">
-                    {formatReceivedTime(latestAppointment?.created_at ?? null)}
-                  </dd>
-                </div>
-              </dl>
+                {latestAppointment ? (
+                  <>
+                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                          Patient Name
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-white">
+                          {latestAppointment.patient_name ?? "Not provided"}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                          Phone Number
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-white">
+                          {latestAppointment.phone_number ?? "Not provided"}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                          Department
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-white">
+                          {latestAppointment.department ?? "Not provided"}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                          Doctor
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-white">
+                          {latestAppointment.doctor ?? "Not provided"}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                          Appointment Date
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-white">
+                          {formatAppointmentDate(latestAppointment.appointment_date)}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                          Appointment Time
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-white">
+                          {latestAppointment.appointment_time ?? "Not provided"}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                          Status
+                        </p>
+                        <div className="mt-2 inline-flex">
+                          <span
+                            className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[getAppointmentStatus(latestAppointment.status)]}`}
+                          >
+                            {getAppointmentStatus(latestAppointment.status)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                          Received
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-white">
+                          {formatReceivedTime(latestAppointment.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/10 px-5 py-8 text-center backdrop-blur">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-white/10 text-white shadow-[0_16px_36px_rgba(15,23,42,0.2)]">
+                      <ClipboardPulseIcon className="h-8 w-8" />
+                    </div>
+                    <p className="mt-5 text-lg font-semibold text-white">
+                      Waiting for first patient booking
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">
+                      The latest appointment card will populate here once the first live booking arrives.
+                    </p>
+                  </div>
+                )}
+              </div>
             </article>
 
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_45px_rgba(15,23,42,0.07)] sm:p-6">
+            <article className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:p-7">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold tracking-normal text-slate-950">
-                    Live Overview
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">
+                    Executive overview
+                  </p>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                    Live overview
                   </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Real-time snapshot from the appointments table
+                  <p className="mt-2 text-sm text-slate-500">
+                    Operational snapshot from the appointments table.
                   </p>
                 </div>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                   Live
                 </span>
               </div>
 
-              <dl className="mt-6 grid gap-4">
-                <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <dt className="text-sm text-slate-500">Appointments tracked</dt>
-                  <dd className="text-sm font-semibold text-slate-950">
-                    {appointments.length}
-                  </dd>
+              <div className="mt-6 grid gap-3">
+                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-2xl bg-sky-50 p-2.5 text-sky-600">
+                        <ClipboardPulseIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          Appointments tracked
+                        </p>
+                        <p className="text-2xl font-semibold tracking-tight text-slate-950">
+                          {appointments.length}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Total volume
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <dt className="text-sm text-slate-500">Confirmed bookings</dt>
-                  <dd className="text-sm font-semibold text-slate-950">
-                    {confirmedAppointments}
-                  </dd>
+
+                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-2xl bg-emerald-50 p-2.5 text-emerald-600">
+                        <SparkIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          Confirmed bookings
+                        </p>
+                        <p className="text-2xl font-semibold tracking-tight text-slate-950">
+                          {confirmedAppointments}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Status mix
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <dt className="text-sm text-slate-500">Calls handled today</dt>
-                  <dd className="text-sm font-semibold text-slate-950">
-                    {callsHandledToday}
-                  </dd>
+
+                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-2xl bg-amber-50 p-2.5 text-amber-600">
+                        <PhoneIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          Calls handled today
+                        </p>
+                        <p className="text-2xl font-semibold tracking-tight text-slate-950">
+                          {callsHandledToday}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Today
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <dt className="text-sm text-slate-500">Latest appointment</dt>
-                  <dd className="text-sm font-semibold text-slate-950">
-                    {latestAppointment?.patient_name ?? "No appointments yet"}
-                  </dd>
+
+                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-2xl bg-violet-50 p-2.5 text-violet-600">
+                        <UsersIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          Active patients
+                        </p>
+                        <p className="text-2xl font-semibold tracking-tight text-slate-950">
+                          {kpis[3]?.value ?? 0}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Unique numbers
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <dt className="text-sm text-slate-500">Last updated</dt>
-                  <dd className="text-sm font-semibold text-slate-950">
-                    {formatLastUpdated(lastUpdated)}
-                  </dd>
+
+                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-2xl bg-slate-900 p-2.5 text-white">
+                        <CalendarIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          Last updated
+                        </p>
+                        <p className="text-sm font-semibold text-slate-950">
+                          {formatLastUpdated(lastUpdated)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Auto refresh
+                    </div>
+                  </div>
                 </div>
-              </dl>
+              </div>
             </article>
           </aside>
         </section>
