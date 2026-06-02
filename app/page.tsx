@@ -313,30 +313,30 @@ function KpiCard({ kpi }: { kpi: Kpi }) {
   const toneStyles = kpiToneStyles[kpi.tone];
 
   return (
-    <article className={`group relative overflow-hidden rounded-[1.5rem] border border-white/70 bg-gradient-to-br p-6 shadow-[0_18px_50px_rgba(15,23,42,0.09)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_60px_rgba(15,23,42,0.14)] ${toneStyles.card}`}>
+    <article className={`group relative overflow-hidden rounded-[1.4rem] border border-white/70 bg-gradient-to-br p-4 shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(15,23,42,0.12)] ${toneStyles.card}`}>
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-70" />
       <div className="flex items-start justify-between gap-5">
         <div>
-          <p className="text-sm font-medium tracking-wide text-slate-500 uppercase">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
             {kpi.label}
           </p>
-          <p className="mt-4 text-4xl font-semibold tracking-tight text-slate-950">
+          <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
             {animatedValue}
             {kpi.suffix}
           </p>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
+          <p className="mt-1.5 text-sm leading-6 text-slate-500">
             {kpi.trend}
           </p>
         </div>
-        <div className={`flex h-14 w-14 items-center justify-center rounded-[1.25rem] ${toneStyles.icon} transition duration-300 group-hover:scale-105`}>
-          <Icon className="h-7 w-7" />
+        <div className={`flex h-12 w-12 items-center justify-center rounded-[1.15rem] ${toneStyles.icon} transition duration-300 group-hover:scale-105`}>
+          <Icon className="h-6 w-6" />
         </div>
       </div>
 
-      <div className="mt-5 flex items-center gap-3">
+      <div className="mt-4 flex items-center gap-3">
         <div
           aria-label={`${kpi.label} progress`}
-          className="h-2 flex-1 overflow-hidden rounded-full bg-white/80 shadow-inner"
+          className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/80 shadow-inner"
           role="progressbar"
           aria-valuenow={kpi.progress ?? 0}
           aria-valuemin={0}
@@ -538,16 +538,16 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_30%),linear-gradient(180deg,#f8fbff_0%,#eef5ff_28%,#ffffff_70%)] px-4 py-4 text-slate-950 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="relative overflow-hidden rounded-[2rem] border border-white/50 bg-slate-950 px-6 py-7 text-white shadow-[0_32px_80px_rgba(15,23,42,0.24)] sm:px-8 lg:px-10">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
+        <header className="relative overflow-hidden rounded-[2rem] border border-white/50 bg-slate-950 px-5 py-4 text-white shadow-[0_24px_64px_rgba(15,23,42,0.22)] sm:px-6 lg:px-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.28),_transparent_30%),radial-gradient(circle_at_bottom_left,_rgba(59,130,246,0.24),_transparent_26%)]" />
           <div className="absolute -right-20 top-0 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl" />
-          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_auto] lg:items-end">
-            <div className="flex items-start gap-5">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.5rem] border border-white/10 bg-white/10 text-xl font-semibold tracking-tight text-white shadow-[0_18px_40px_rgba(15,23,42,0.25)] backdrop-blur">
+          <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_auto] lg:items-center">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border border-white/10 bg-white/10 text-sm font-semibold tracking-tight text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur">
                 SR
               </div>
-              <div className="max-w-3xl">
+              <div className="max-w-4xl">
                 <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200 backdrop-blur">
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -555,35 +555,35 @@ export default function Home() {
                   </span>
                   AI Receptionist Online
                 </div>
-                <h1 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                  SriCare clinical operations
+                <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-[2.65rem]">
+                  SriCare front desk
                 </h1>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-                  Premium appointment intelligence for clinics and hospitals, powered by live Supabase data and designed for executive demos.
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-[0.95rem]">
+                  Live appointment handling for clinic owners watching the front desk in real time.
                 </p>
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  <div className="rounded-[1.25rem] border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="rounded-[1.15rem] border border-white/10 bg-white/10 px-4 py-2.5 backdrop-blur">
                     <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
                       Current date
                     </p>
-                    <p className="mt-2 text-sm font-semibold text-white">
+                    <p className="mt-1.5 text-sm font-semibold text-white">
                       {formatHeroDate(currentTime)}
                     </p>
                   </div>
-                  <div className="rounded-[1.25rem] border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                  <div className="rounded-[1.15rem] border border-white/10 bg-white/10 px-4 py-2.5 backdrop-blur">
                     <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
                       Current time
                     </p>
-                    <p className="mt-2 text-sm font-semibold text-white">
+                    <p className="mt-1.5 text-sm font-semibold text-white">
                       {formatHeroTime(currentTime)}
                     </p>
                   </div>
-                  <div className="rounded-[1.25rem] border border-white/10 bg-white/10 px-4 py-3 backdrop-blur sm:col-span-2 xl:col-span-1">
+                  <div className="rounded-[1.15rem] border border-white/10 bg-white/10 px-4 py-2.5 backdrop-blur">
                     <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
                       Last synced
                     </p>
-                    <p className="mt-2 text-sm font-semibold text-white">
+                    <p className="mt-1.5 text-sm font-semibold text-white">
                       {formatLastUpdated(lastUpdated)}
                     </p>
                   </div>
@@ -591,21 +591,21 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative rounded-[1.5rem] border border-white/10 bg-white/10 p-4 backdrop-blur">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:min-w-[270px]">
-                <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+            <div className="relative rounded-[1.35rem] border border-white/10 bg-white/10 p-3.5 backdrop-blur">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:min-w-[230px]">
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-3.5 py-2.5">
                   <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
                     Dashboard mode
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-white">
-                    Live appointment intelligence
+                  <p className="mt-1.5 text-sm font-semibold text-white">
+                    Front desk live view
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-3.5 py-2.5">
                   <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
                     Appointments tracked
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-white">
+                  <p className="mt-1.5 text-sm font-semibold text-white">
                     {appointments.length}
                   </p>
                 </div>
@@ -623,22 +623,22 @@ export default function Home() {
           ))}
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,6.7fr)_minmax(320px,3.3fr)]">
-          <article className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.08)]">
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,8.8fr)_minmax(280px,2.2fr)]">
+          <article className="overflow-hidden rounded-[1.85rem] border border-slate-200/80 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.09)]">
             <div className="flex flex-col gap-4 border-b border-slate-200 bg-white px-6 py-5 sm:px-7 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">
-                  Appointments
+                  Incoming appointments
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
                   Recent appointments
                 </h2>
                 <p className="mt-2 text-sm text-slate-500">
-                  Live records from the appointments table, sorted newest first.
+                  The first screen a clinic owner should focus on during a demo.
                 </p>
               </div>
               <div className="rounded-full border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
-                Sticky table header enabled
+                Incoming queue
               </div>
             </div>
 
@@ -649,7 +649,7 @@ export default function Home() {
             ) : null}
 
             {isLoading ? (
-              <div className="grid min-h-[540px] place-items-center px-6 py-16 sm:px-7">
+              <div className="grid min-h-[620px] place-items-center px-6 py-16 sm:px-7">
                 <div className="flex flex-col items-center gap-4 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-sky-100 bg-sky-50 text-sky-600 shadow-[0_12px_28px_rgba(37,99,235,0.12)]">
                     <ClipboardPulseIcon className="h-7 w-7 animate-pulse" />
@@ -663,8 +663,8 @@ export default function Home() {
                 </div>
               </div>
             ) : appointments.length > 0 ? (
-              <div className="max-h-[760px] overflow-auto">
-                <table className="w-full min-w-[1220px] border-collapse text-left">
+              <div className="max-h-[860px] overflow-auto">
+                <table className="w-full min-w-[1400px] border-collapse text-left">
                   <thead className="sticky top-0 z-20">
                     <tr className="bg-slate-50/95 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 backdrop-blur supports-[backdrop-filter]:bg-slate-50/90">
                       <th className="sticky top-0 border-b border-slate-200 px-6 py-4 sm:px-7 bg-inherit">Patient Name</th>
@@ -684,9 +684,9 @@ export default function Home() {
                       return (
                         <tr
                           key={appointment.id}
-                          className="text-sm text-slate-700 transition-colors duration-200 hover:bg-sky-50/60"
+                          className="text-[0.95rem] text-slate-700 transition-colors duration-200 hover:bg-sky-50/60"
                         >
-                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
+                          <td className="whitespace-nowrap px-6 py-5 sm:px-7">
                             <div className="flex items-center gap-3">
                               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-600 to-blue-700 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(37,99,235,0.18)]">
                                 {getInitials(appointment.patient_name)}
@@ -696,29 +696,29 @@ export default function Home() {
                               </span>
                             </div>
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
+                          <td className="whitespace-nowrap px-6 py-5 sm:px-7">
                             {appointment.phone_number ?? "Not provided"}
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
+                          <td className="whitespace-nowrap px-6 py-5 sm:px-7">
                             {appointment.department ?? "Not provided"}
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
+                          <td className="whitespace-nowrap px-6 py-5 sm:px-7">
                             {appointment.doctor ?? "Not provided"}
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-950 sm:px-7">
+                          <td className="whitespace-nowrap px-6 py-5 font-medium text-slate-950 sm:px-7">
                             {formatAppointmentDate(appointment.appointment_date)}
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 font-medium text-slate-950 sm:px-7">
+                          <td className="whitespace-nowrap px-6 py-5 font-medium text-slate-950 sm:px-7">
                             {appointment.appointment_time ?? "Not provided"}
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
+                          <td className="whitespace-nowrap px-6 py-5 sm:px-7">
                             <span
                               className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[status]}`}
                             >
                               {status}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 sm:px-7">
+                          <td className="whitespace-nowrap px-6 py-5 sm:px-7">
                             {appointment.source ?? "Not provided"}
                           </td>
                         </tr>
@@ -728,7 +728,7 @@ export default function Home() {
                 </table>
               </div>
             ) : (
-              <div className="grid min-h-[620px] place-items-center px-6 py-16 sm:px-7">
+              <div className="grid min-h-[700px] place-items-center px-6 py-16 sm:px-7">
                 <div className="max-w-xl rounded-[2rem] border border-sky-100 bg-gradient-to-b from-sky-50 via-white to-white p-10 text-center shadow-[0_18px_45px_rgba(37,99,235,0.12)]">
                   <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-gradient-to-br from-sky-600 to-blue-700 text-white shadow-[0_18px_38px_rgba(37,99,235,0.2)]">
                     <ClipboardPulseIcon className="h-10 w-10" />
@@ -757,17 +757,17 @@ export default function Home() {
 
           <aside className="flex flex-col gap-6">
             <article className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-slate-950 text-white shadow-[0_20px_60px_rgba(15,23,42,0.22)]">
-              <div className="bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.2),_transparent_34%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.16),_transparent_28%)] p-6 sm:p-7">
+              <div className="bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.2),_transparent_34%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.16),_transparent_28%)] p-5 sm:p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200">
-                      Featured booking
+                      Latest appointment
                     </p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+                    <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
                       {latestAppointment?.patient_name ?? "Waiting for first patient booking"}
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-slate-300">
-                      Latest appointment surfaced for executive review.
+                      What the front desk should see first.
                     </p>
                   </div>
                   <div className="rounded-[1.25rem] border border-white/10 bg-white/10 p-3 text-sky-100 backdrop-blur">
@@ -777,7 +777,7 @@ export default function Home() {
 
                 {latestAppointment ? (
                   <>
-                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
                           Patient Name
@@ -838,7 +838,7 @@ export default function Home() {
                           </span>
                         </div>
                       </div>
-                      <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
+                      <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
                           Received
                         </p>
@@ -864,17 +864,17 @@ export default function Home() {
               </div>
             </article>
 
-            <article className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:p-7">
+            <article className="rounded-[1.75rem] border border-slate-200/80 bg-white p-5 shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600">
-                    Executive overview
+                    Reception status
                   </p>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                    Live overview
+                  <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">
+                    AI receptionist status
                   </h2>
                   <p className="mt-2 text-sm text-slate-500">
-                    Operational snapshot from the appointments table.
+                    Keep the assistant, sync, and queue state visible at a glance.
                   </p>
                 </div>
                 <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
@@ -882,8 +882,8 @@ export default function Home() {
                 </span>
               </div>
 
-              <div className="mt-6 grid gap-3">
-                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+              <div className="mt-5 grid gap-3">
+                <div className="rounded-[1.15rem] border border-slate-200 bg-slate-50/80 px-4 py-3.5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="rounded-2xl bg-sky-50 p-2.5 text-sky-600">
@@ -898,13 +898,11 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Total volume
-                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Queue</div>
                   </div>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+                <div className="rounded-[1.15rem] border border-slate-200 bg-slate-50/80 px-4 py-3.5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="rounded-2xl bg-emerald-50 p-2.5 text-emerald-600">
@@ -919,13 +917,11 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Status mix
-                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Today</div>
                   </div>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+                <div className="rounded-[1.15rem] border border-slate-200 bg-slate-50/80 px-4 py-3.5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="rounded-2xl bg-amber-50 p-2.5 text-amber-600">
@@ -940,13 +936,11 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Today
-                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Calls</div>
                   </div>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+                <div className="rounded-[1.15rem] border border-slate-200 bg-slate-50/80 px-4 py-3.5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="rounded-2xl bg-violet-50 p-2.5 text-violet-600">
@@ -961,13 +955,11 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Unique numbers
-                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Patients</div>
                   </div>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4">
+                <div className="rounded-[1.15rem] border border-slate-200 bg-slate-50/80 px-4 py-3.5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="rounded-2xl bg-slate-900 p-2.5 text-white">
@@ -982,9 +974,7 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Auto refresh
-                    </div>
+                    <div className="text-right text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Sync</div>
                   </div>
                 </div>
               </div>
